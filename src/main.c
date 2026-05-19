@@ -1,35 +1,132 @@
-#include "raylib.h"
-#include "game.h"
-#include "ui.h"
+#include <stdio.h>
 
-#define SCREEN_WIDTH 1200
-#define SCREEN_HEIGHT 700
+#define ESQUERDA 0
+#define DIREITA 1
 
-int main()
-{
-    InitWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Lobo, Ovelha e Cacador");
+typedef struct {
+    int lado;
+} Personagem;
 
-    SetTargetFPS(60);
+Personagem lobo;
+Personagem ovelha;
+Personagem cacador;
 
-    GameState game;
+void limparTela() {
+    for(int i = 0; i < 30; i++) {
+        printf("\n");
+    }
+}
 
-    InitGame(&game);
+void desenharJogo() {
 
-    while(!WindowShouldClose())
-    {
-        UpdateGame(&game);
+    printf("========================================\n");
+    printf("        LOBO, OVELHA E CACADOR\n");
+    printf("========================================\n\n");
 
-        BeginDrawing();
+    printf("ESQUERDA                     DIREITA\n");
+    printf("----------------------------------------\n");
 
-        ClearBackground(SKYBLUE);
+    printf("Lobo:     %s\n",
+           lobo.lado == ESQUERDA ? "ESQUERDA" : "DIREITA");
 
-        DrawGame(&game);
-        DrawMenu();
+    printf("Ovelha:   %s\n",
+           ovelha.lado == ESQUERDA ? "ESQUERDA" : "DIREITA");
 
-        EndDrawing();
+    printf("Cacador:  %s\n",
+           cacador.lado == ESQUERDA ? "ESQUERDA" : "DIREITA");
+
+    printf("\n");
+}
+
+int verificarDerrota() {
+
+    if(lobo.lado == ovelha.lado &&
+       cacador.lado != lobo.lado) {
+        return 1;
     }
 
-    CloseWindow();
+    return 0;
+}
+
+int verificarVitoria() {
+
+    if(lobo.lado == DIREITA &&
+       ovelha.lado == DIREITA &&
+       cacador.lado == DIREITA) {
+        return 1;
+    }
+
+    return 0;
+}
+
+void mover(int opcao) {
+
+    switch(opcao) {
+
+        case 1:
+
+            if(cacador.lado == lobo.lado) {
+                lobo.lado = !lobo.lado;
+                cacador.lado = !cacador.lado;
+            }
+
+            break;
+
+        case 2:
+
+            if(cacador.lado == ovelha.lado) {
+                ovelha.lado = !ovelha.lado;
+                cacador.lado = !cacador.lado;
+            }
+
+            break;
+
+        case 3:
+
+            cacador.lado = !cacador.lado;
+
+            break;
+
+        default:
+            printf("Opcao invalida!\n");
+    }
+}
+
+int main() {
+
+    int opcao;
+
+    lobo.lado = ESQUERDA;
+    ovelha.lado = ESQUERDA;
+    cacador.lado = ESQUERDA;
+
+    while(1) {
+
+        limparTela();
+
+        desenharJogo();
+
+        if(verificarDerrota()) {
+            printf("GAME OVER!\n");
+            printf("O lobo ficou sozinho com a ovelha.\n");
+            break;
+        }
+
+        if(verificarVitoria()) {
+            printf("PARABENS! VOCE VENCEU!\n");
+            break;
+        }
+
+        printf("Escolha uma acao:\n");
+        printf("1 - Levar lobo\n");
+        printf("2 - Levar ovelha\n");
+        printf("3 - Ir sozinho\n");
+
+        printf("Opcao: ");
+        scanf("%d", &opcao);
+
+        mover(opcao);
+    }
 
     return 0;
 }
