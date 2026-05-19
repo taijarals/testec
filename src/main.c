@@ -11,12 +11,13 @@
 // =====================================
 // CONFIGURAÇÕES
 // =====================================
-int TAM;
+int ALTURA;
+int LARGURA;
 
 float perc_ovelha    = 0.05;
 float perc_lobo      = 0.03;
 float perc_cacador   = 0.02;
-float perc_obstaculo = 0.10;
+float perc_obstaculo = 0.20;
 
 #define TURNOS 50
 
@@ -24,8 +25,8 @@ float perc_obstaculo = 0.10;
 // STRUCT
 // =====================================
 typedef struct {
-    int x;
-    int y;
+    int x; 
+    int y; 
     char* simbolo; 
     int ativa;
 } Personagem;
@@ -36,7 +37,7 @@ typedef struct {
 char*** tabuleiro;
 
 // =====================================
-// POPULAÇÕES
+// POPULAÇÕES (Globais para realloc)
 // =====================================
 Personagem *ovelhas;
 Personagem *lobos;
@@ -50,6 +51,18 @@ int qtdObstaculos;
 
 int ovelhasVivas; 
 int lobosVivos;
+int totalMoveis; // Movido para global para atualizar no nascimento
+
+// =====================================
+// LIMPEZA DE TELA
+// =====================================
+void limparTela() {
+#ifdef _WIN32
+    system("cls");
+#else
+    system("clear");
+#endif
+}
 
 // =====================================
 // PAUSA
@@ -63,12 +76,12 @@ void pausar() {
 }
 
 // =====================================
-// CRIA TABULEIRO
+// CRIA TABULEIRO RETANGULAR
 // =====================================
 void criarTabuleiro() {
-    tabuleiro = malloc(TAM * sizeof(char**));
-    for(int i = 0; i < TAM; i++) {
-        tabuleiro[i] = malloc(TAM * sizeof(char*));
+    tabuleiro = malloc(ALTURA * sizeof(char**));
+    for(int i = 0; i < ALTURA; i++) {
+        tabuleiro[i] = malloc(LARGURA * sizeof(char*));
     }
 }
 
@@ -76,7 +89,7 @@ void criarTabuleiro() {
 // LIBERA MEMÓRIA
 // =====================================
 void liberarMemoria() {
-    for(int i = 0; i < TAM; i++) {
+    for(int i = 0; i < ALTURA; i++) {
         free(tabuleiro[i]);
     }
     free(tabuleiro);
@@ -91,9 +104,9 @@ void liberarMemoria() {
 // LIMPA TABULEIRO
 // =====================================
 void limparTabuleiro() {
-    for(int i = 0; i < TAM; i++) {
-        for(int j = 0; j < TAM; j++) {
-            tabuleiro[i][j] = ". "; 
+    for(int i = 0; i < ALTURA; i++) {
+        for(int j = 0; j < LARGURA; j++) {
+            tabuleiro[i][j] = "  "; 
         }
     }
 }
@@ -102,7 +115,7 @@ void limparTabuleiro() {
 // VERIFICA OCUPAÇÃO
 // =====================================
 int ocupado(int x, int y) {
-    if (tabuleiro[x][y] != ". ") {
+    if (tabuleiro[x][y] != "  ") {
         return 1;
     }
     return 0;
@@ -112,14 +125,14 @@ int ocupado(int x, int y) {
 // CALCULA POPULAÇÃO
 // =====================================
 int calc(float perc, int min, int max) {
-    int qtd = (int)(TAM * TAM * perc);
+    int qtd = (int)(ALTURA * LARGURA * perc);
     if(qtd < min)  qtd = min;
     if(qtd > max)  qtd = max;
     return qtd;
 }
 
 // =====================================
-// POSICIONAMENTO
+// POSICIONAMENTO RETANGULAR
 // =====================================
 void posicionar() {
     limparTabuleiro();
@@ -129,8 +142,8 @@ void posicionar() {
         ovelhas[i].simbolo = "🐑";
         ovelhas[i].ativa = 1;
         do {
-            ovelhas[i].x = rand() % TAM;
-            ovelhas[i].y = rand() % TAM;
+            ovelhas[i].x = rand() % ALTURA;
+            ovelhas[i].y = rand() % LARGURA;
         } while(ocupado(ovelhas[i].x, ovelhas[i].y));
         tabuleiro[ovelhas[i].x][ovelhas[i].y] = ovelhas[i].simbolo;
     }
@@ -140,8 +153,8 @@ void posicionar() {
         lobos[i].simbolo = "🐺";
         lobos[i].ativa = 1;
         do {
-            lobos[i].x = rand() % TAM;
-            lobos[i].y = rand() % TAM;
+            lobos[i].x = rand() % ALTURA;
+            lobos[i].y = rand() % LARGURA;
         } while(ocupado(lobos[i].x, lobos[i].y));
         tabuleiro[lobos[i].x][lobos[i].y] = lobos[i].simbolo;
     }
@@ -151,8 +164,8 @@ void posicionar() {
         cacadores[i].simbolo = "🤠";
         cacadores[i].ativa = 1;
         do {
-            cacadores[i].x = rand() % TAM;
-            cacadores[i].y = rand() % TAM;
+            cacadores[i].x = rand() % ALTURA;
+            cacadores[i].y = rand() % LARGURA;
         } while(ocupado(cacadores[i].x, cacadores[i].y));
         tabuleiro[cacadores[i].x][cacadores[i].y] = cacadores[i].simbolo;
     }
@@ -162,8 +175,8 @@ void posicionar() {
         obstaculos[i].simbolo = "🌲";
         obstaculos[i].ativa = 1;
         do {
-            obstaculos[i].x = rand() % TAM;
-            obstaculos[i].y = rand() % TAM;
+            obstaculos[i].x = rand() % ALTURA;
+            obstaculos[i].y = rand() % LARGURA;
         } while(ocupado(obstaculos[i].x, obstaculos[i].y));
         tabuleiro[obstaculos[i].x][obstaculos[i].y] = obstaculos[i].simbolo;
     }
@@ -202,27 +215,84 @@ void atualizarTabuleiro() {
 }
 
 // =====================================
-// DESENHAR
+// DESENHAR RETÂNGULO
 // =====================================
 void desenhar() {
     printf("\n+");
-    for(int i = 0; i < TAM * 2 + 1; i++) printf("-");
+    for(int i = 0; i < LARGURA * 2 + 1; i++) printf("-");
     printf("+\n");
 
-    for(int i = 0; i < TAM; i++) {
+    for(int i = 0; i < ALTURA; i++) {
         printf("| ");
-        for(int j = 0; j < TAM; j++) {
+        for(int j = 0; j < LARGURA; j++) {
             printf("%s", tabuleiro[i][j]); 
         }
         printf("|\n");
     }
 
     printf("+");
-    for(int i = 0; i < TAM * 2 + 1; i++) printf("-");
+    for(int i = 0; i < LARGURA * 2 + 1; i++) printf("-");
     printf("+\n\n");
 
     printf("Ovelhas 🐑: %d/%d | Lobos 🐺: %d/%d | Cacadores 🤠: %d | Arvores 🌲: %d\n", 
             ovelhasVivas, qtdOvelhas, lobosVivos, qtdLobos, qtdCacadores, qtdObstaculos);
+}
+
+// =====================================
+// FUNÇÕES DE NATALIDADE (NOVAS)
+// Expanção de vetores via realloc
+// =====================================
+void nascerOvelha() {
+    // Checa se ainda há alguma vaga física no mapa
+    int vagasLivres = 0;
+    for(int i = 0; i < ALTURA; i++) {
+        for(int j = 0; j < LARGURA; j++) {
+            if(!ocupado(i, j)) vagasLivres++;
+        }
+    }
+    if (vagasLivres == 0) return; // Tabuleiro lotado
+
+    qtdOvelhas++;
+    ovelhas = realloc(ovelhas, qtdOvelhas * sizeof(Personagem));
+    totalMoveis++; // Aumenta o range do sorteio do main
+
+    int novoIndex = qtdOvelhas - 1;
+    ovelhas[novoIndex].simbolo = "🐑";
+    ovelhas[novoIndex].ativa = 1;
+
+    do {
+        ovelhas[novoIndex].x = rand() % ALTURA;
+        ovelhas[novoIndex].y = rand() % LARGURA;
+    } while (ocupado(ovelhas[novoIndex].x, ovelhas[novoIndex].y));
+
+    tabuleiro[ovelhas[novoIndex].x][ovelhas[novoIndex].y] = "🐑";
+    printf(" -> Um filhotinho de ovelha 🐑 nasceu na floresta!\n");
+}
+
+void nascerLobo() {
+    int vagasLivres = 0;
+    for(int i = 0; i < ALTURA; i++) {
+        for(int j = 0; j < LARGURA; j++) {
+            if(!ocupado(i, j)) vagasLivres++;
+        }
+    }
+    if (vagasLivres == 0) return;
+
+    qtdLobos++;
+    lobos = realloc(lobos, qtdLobos * sizeof(Personagem));
+    totalMoveis++;
+
+    int novoIndex = qtdLobos - 1;
+    lobos[novoIndex].simbolo = "🐺";
+    lobos[novoIndex].ativa = 1;
+
+    do {
+        lobos[novoIndex].x = rand() % ALTURA;
+        lobos[novoIndex].y = rand() % LARGURA;
+    } while (ocupado(lobos[novoIndex].x, lobos[novoIndex].y));
+
+    tabuleiro[lobos[novoIndex].x][lobos[novoIndex].y] = "🐺";
+    printf(" -> Uma nova cria de lobo 🐺 nasceu na alcateia!\n");
 }
 
 // =====================================
@@ -253,7 +323,7 @@ void matarLoboNaPosicao(int x, int y) {
 }
 
 // =====================================
-// MOVIMENTO
+// MOVIMENTO RETANGULAR COM REPRODUÇÃO
 // =====================================
 void mover(Personagem *p) {
     if(!p->ativa) return;
@@ -269,37 +339,49 @@ void mover(Personagem *p) {
         case 3: novoY++; break;
     }
 
-    if(novoX >= 0 && novoX < TAM && novoY >= 0 && novoY < TAM) {
+    if(novoX >= 0 && novoX < ALTURA && novoY >= 0 && novoY < LARGURA) {
         char* destino = tabuleiro[novoX][novoY];
 
         // --- REGRAS DA OVELHA ---
-        if(p->simbolo == "🐑" && destino == "🐺") {
-            tabuleiro[p->x][p->y] = ". "; 
-            p->ativa = 0; p->x = -1; p->y = -1;
-            printf(" -> A ovelha 🐑 andou direto para um lobo! ☠️\n");
-            return;
+        if(p->simbolo == "🐑") {
+            if(destino == "🐺") {
+                tabuleiro[p->x][p->y] = "  "; 
+                p->ativa = 0; p->x = -1; p->y = -1;
+                printf(" -> A ovelha 🐑 andou direto para um lobo! ☠️\n");
+                return;
+            }
+            if(destino == "🐑") {
+                // Encontro de ovelhas gera reprodução (Elas voltam para trás/não andam sobre a outra)
+                nascerOvelha();
+                return;
+            }
         }
 
         // --- REGRAS DO LOBO ---
         if(p->simbolo == "🐺") {
             if(destino == "🐑") {
-                tabuleiro[p->x][p->y] = ". ";
+                tabuleiro[p->x][p->y] = "  ";
                 matarOvelhaNaPosicao(novoX, novoY);
                 p->x = novoX; p->y = novoY;
                 tabuleiro[p->x][p->y] = p->simbolo;
                 return;
             }
             if(destino == "🤠") {
-                tabuleiro[p->x][p->y] = ". ";
+                tabuleiro[p->x][p->y] = "  ";
                 p->ativa = 0; p->x = -1; p->y = -1;
                 printf(" -> O lobo 🐺 tentou atacar o cacador e morreu! 🎯\n");
+                return;
+            }
+            if(destino == "🐺") {
+                // Encontro de lobos gera reprodução
+                nascerLobo();
                 return;
             }
         }
 
         // --- REGRAS DO CAÇADOR ---
         if(p->simbolo == "🤠" && destino == "🐺") {
-            tabuleiro[p->x][p->y] = ". ";
+            tabuleiro[p->x][p->y] = "  ";
             matarLoboNaPosicao(novoX, novoY);
             p->x = novoX; p->y = novoY;
             tabuleiro[p->x][p->y] = p->simbolo;
@@ -307,7 +389,7 @@ void mover(Personagem *p) {
         }
 
         // --- MOVIMENTAÇÃO PADRÃO ---
-        tabuleiro[p->x][p->y] = ". ";
+        tabuleiro[p->x][p->y] = "  ";
         if(!ocupado(novoX, novoY)) {
             p->x = novoX;
             p->y = novoY;
@@ -327,13 +409,15 @@ int main() {
     setbuf(stdout, NULL);
     srand(time(NULL));
 
-    printf("Digite o tamanho do tabuleiro (5-100): ");
-    if (scanf("%d", &TAM) != 1) {
-        TAM = 10;
+    printf("Digite a altura do tabuleiro (5-100): ");
+    if (scanf("%d", &ALTURA) != 1) {
+        ALTURA = 10;
     }
 
-    if(TAM < 5)   TAM = 5;
-    if(TAM > 100) TAM = 100;
+    if(ALTURA < 5)   ALTURA = 5;
+    if(ALTURA > 100) ALTURA = 100;
+
+    LARGURA = (int)(ALTURA * 1.5);
 
     qtdOvelhas    = calc(perc_ovelha, 1, 1000);
     qtdLobos      = calc(perc_lobo, 1, 500);
@@ -349,11 +433,14 @@ int main() {
 
     posicionar();
 
-    int totalMoveis = qtdOvelhas + qtdLobos + qtdCacadores;
+    // Define o valor inicial da população total que se mexe
+    totalMoveis = qtdOvelhas + qtdLobos + qtdCacadores;
 
     // LOOP PRINCIPAL
     for(int turno = 1; turno <= TURNOS; turno++) {
         
+        limparTela();
+
         atualizarTabuleiro();
 
         printf("\n=========== TURNO %d ===========\n", turno);
