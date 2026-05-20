@@ -19,7 +19,7 @@ float perc_lobo      = 0.03;
 float perc_cacador   = 0.02;
 float perc_obstaculo = 0.20;
 
-#define TURNOS 50
+#define TURNOS 500
 
 // =====================================
 // STRUCT
